@@ -435,6 +435,47 @@
             letter-spacing: 1px;
         }
 
+        /* ===== COUNTDOWN ===== */
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 105, 180, 0.2);
+            border-radius: 14px;
+            padding: 10px 14px;
+            min-width: 62px;
+            box-shadow: 0 2px 12px rgba(255, 105, 180, 0.08);
+        }
+
+        .countdown-num {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+            background: linear-gradient(135deg, var(--pink-dark), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .countdown-unit {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             background: linear-gradient(180deg, var(--pink-light), #E8D5E0);
@@ -662,7 +703,25 @@
         <div class="date-display">
             <span class="date-value">16 августа</span>
         </div>
-        <p class="countdown-label">✨ Сегодня особенный день ✨</p>
+        <p class="countdown-label" id="countdownLabel">✨ Сегодня особенный день ✨</p>
+        <div class="countdown" id="countdown" style="display:none;">
+            <div class="countdown-item">
+                <span class="countdown-num" id="cdDays">0</span>
+                <span class="countdown-unit">дней</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="cdHours">0</span>
+                <span class="countdown-unit">часов</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="cdMinutes">0</span>
+                <span class="countdown-unit">минут</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="cdSeconds">0</span>
+                <span class="countdown-unit">секунд</span>
+            </div>
+        </div>
     </section>
 
     <div class="section-divider"></div>
@@ -935,6 +994,63 @@
                 }
             });
         });
+
+        // ===== COUNTDOWN TO NEXT BIRTHDAY =====
+        // После 16.08.2026 (дня рождения) показываем отсчёт до 16.08.2027 — 22 года
+        (function setupCountdown() {
+            const now = new Date();
+            // Порог: 17.08.2026 00:00 — день рождения прошёл
+            const birthdayPassed = new Date(2026, 7, 17, 0, 0, 0); // месяц 7 = август
+            if (now < birthdayPassed) return; // ещё праздник — отсчёт не нужен
+
+            const target = new Date(2027, 7, 16, 0, 0, 0); // 16.08.2027, 22 года
+
+            // Показываем блок отсчёта
+            const countdownEl = document.getElementById('countdown');
+            const labelEl = document.getElementById('countdownLabel');
+            if (countdownEl) countdownEl.style.display = 'flex';
+            if (labelEl) labelEl.textContent = '✨ До 22-летия осталось ✨';
+
+            // Обновляем возрастной бейдж на 22
+            const ageBadge = document.querySelector('.age-badge');
+            if (ageBadge) ageBadge.textContent = '22';
+
+            // Обновляем текст пожелания про возраст на 22 года
+            document.querySelectorAll('.wish-text').forEach(el => {
+                if (el.textContent.includes('21 год')) {
+                    el.textContent = 'Пусть 22 года станут началом самой красивой главы';
+                }
+            });
+
+            const dEl = document.getElementById('cdDays');
+            const hEl = document.getElementById('cdHours');
+            const mEl = document.getElementById('cdMinutes');
+            const sEl = document.getElementById('cdSeconds');
+
+            function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+            function update() {
+                const diff = target - new Date();
+                if (diff <= 0) {
+                    // Наступило 22-летие — показываем праздничное сообщение
+                    if (labelEl) labelEl.textContent = '✨ Сегодня особенный день ✨';
+                    if (countdownEl) countdownEl.style.display = 'none';
+                    clearInterval(timer);
+                    return;
+                }
+                const days = Math.floor(diff / 86400000);
+                const hours = Math.floor((diff % 86400000) / 3600000);
+                const mins = Math.floor((diff % 3600000) / 60000);
+                const secs = Math.floor((diff % 60000) / 1000);
+                if (dEl) dEl.textContent = days;
+                if (hEl) hEl.textContent = pad(hours);
+                if (mEl) mEl.textContent = pad(mins);
+                if (sEl) sEl.textContent = pad(secs);
+            }
+
+            update();
+            const timer = setInterval(update, 1000);
+        })();
 
         // ===== INITIAL LOAD ANIMATION =====
         window.addEventListener('load', () => {
