@@ -476,6 +476,123 @@
             margin-top: 5px;
         }
 
+        /* ===== FULLSCREEN TIMER PAGE ===== */
+        .timer-page {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            background: linear-gradient(180deg, #E8D5E0 0%, var(--pink-light) 30%, var(--pink-light) 70%, #E8D5E0 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+            overflow-y: auto;
+        }
+
+        .timer-page.active {
+            display: flex;
+        }
+
+        .timer-page .timer-emoji {
+            font-size: 40px;
+            animation: bounce 2s ease-in-out infinite;
+            display: inline-block;
+        }
+
+        .timer-page .timer-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 14px 0 6px;
+            line-height: 1.2;
+        }
+
+        .timer-page .timer-title span {
+            background: linear-gradient(135deg, var(--pink-dark), var(--rose));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .timer-page .timer-sub {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-style: italic;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .timer-page .timer-age {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pink-dark), var(--rose));
+            color: white;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 12px 0 24px;
+            box-shadow: 0 4px 20px rgba(255, 105, 180, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .timer-page .timer-date {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 40px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--pink-dark), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .timer-page .timer-label {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 12px;
+            color: var(--text-light);
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .timer-page .countdown {
+            margin-top: 0;
+        }
+
+        .timer-page .countdown-item {
+            min-width: 68px;
+            padding: 14px 16px;
+        }
+
+        .timer-page .countdown-num {
+            font-size: 38px;
+        }
+
+        .timer-page .countdown-unit {
+            font-size: 10px;
+        }
+
+        .timer-page .timer-footer {
+            font-family: 'Great Vibes', cursive;
+            font-size: 24px;
+            color: var(--pink-dark);
+            margin-top: 30px;
+        }
+
+        .timer-page .timer-footer-sub {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
         /* ===== FOOTER ===== */
         .footer {
             background: linear-gradient(180deg, var(--pink-light), #E8D5E0);
@@ -829,6 +946,36 @@
         <span class="scroll-arrow">↓</span>
     </div>
 
+    <!-- ===== FULLSCREEN TIMER PAGE (shown after birthday) ===== -->
+    <div class="timer-page" id="timerPage">
+        <div class="timer-emoji">🎂</div>
+        <h1 class="timer-title"><span>До дня рождения</span></h1>
+        <p class="timer-sub">Диана</p>
+        <div class="timer-age">22</div>
+        <div class="timer-date">16 августа 2027</div>
+        <p class="timer-label">✨ Осталось совсем немного ✨</p>
+        <div class="countdown" id="timerCountdown">
+            <div class="countdown-item">
+                <span class="countdown-num" id="tDays">0</span>
+                <span class="countdown-unit">дней</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="tHours">0</span>
+                <span class="countdown-unit">часов</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="tMinutes">0</span>
+                <span class="countdown-unit">минут</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-num" id="tSeconds">0</span>
+                <span class="countdown-unit">секунд</span>
+            </div>
+        </div>
+        <p class="timer-footer">С любовью!</p>
+        <p class="timer-footer-sub">16.08.2027</p>
+    </div>
+
     <script>
         // ===== SCROLL ANIMATIONS =====
         const sections = document.querySelectorAll('.section, .wish-card');
@@ -996,46 +1143,38 @@
         });
 
         // ===== COUNTDOWN TO NEXT BIRTHDAY =====
-        // После 16.08.2026 (дня рождения) показываем отсчёт до 16.08.2027 — 22 года
+        // После 16.08.2026 (дня рождения) скрываем всё поздравление
+        // и показываем только полноэкранный таймер до 16.08.2027 — 22 года
         (function setupCountdown() {
             const now = new Date();
             // Порог: 17.08.2026 00:00 — день рождения прошёл
             const birthdayPassed = new Date(2026, 7, 17, 0, 0, 0); // месяц 7 = август
-            if (now < birthdayPassed) return; // ещё праздник — отсчёт не нужен
+            if (now < birthdayPassed) return; // ещё праздник — поздравление видно
 
             const target = new Date(2027, 7, 16, 0, 0, 0); // 16.08.2027, 22 года
 
-            // Показываем блок отсчёта
-            const countdownEl = document.getElementById('countdown');
-            const labelEl = document.getElementById('countdownLabel');
-            if (countdownEl) countdownEl.style.display = 'flex';
-            if (labelEl) labelEl.textContent = '✨ До 22-летия осталось ✨';
-
-            // Обновляем возрастной бейдж на 22
-            const ageBadge = document.querySelector('.age-badge');
-            if (ageBadge) ageBadge.textContent = '22';
-
-            // Обновляем текст пожелания про возраст на 22 года
-            document.querySelectorAll('.wish-text').forEach(el => {
-                if (el.textContent.includes('21 год')) {
-                    el.textContent = 'Пусть 22 года станут началом самой красивой главы';
-                }
+            // Скрываем ВСЁ содержимое страницы (поздравление, конфетти, сердечки, музыку и т.д.)
+            document.body.querySelectorAll('body > *:not(.timer-page):not(#timerPage)').forEach(el => {
+                el.style.display = 'none';
             });
 
-            const dEl = document.getElementById('cdDays');
-            const hEl = document.getElementById('cdHours');
-            const mEl = document.getElementById('cdMinutes');
-            const sEl = document.getElementById('cdSeconds');
+            // Показываем полноэкранный таймер
+            const timerPage = document.getElementById('timerPage');
+            if (timerPage) timerPage.classList.add('active');
+
+            const dEl = document.getElementById('tDays');
+            const hEl = document.getElementById('tHours');
+            const mEl = document.getElementById('tMinutes');
+            const sEl = document.getElementById('tSeconds');
 
             function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
             function update() {
                 const diff = target - new Date();
                 if (diff <= 0) {
-                    // Наступило 22-летие — показываем праздничное сообщение
-                    if (labelEl) labelEl.textContent = '✨ Сегодня особенный день ✨';
-                    if (countdownEl) countdownEl.style.display = 'none';
+                    // Наступило 22-летие — перезагружаем страницу, чтобы показать поздравление
                     clearInterval(timer);
+                    location.reload();
                     return;
                 }
                 const days = Math.floor(diff / 86400000);
